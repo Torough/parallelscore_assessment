@@ -41,6 +41,7 @@ def create_user():
     response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/signup/form", data = user_data)
     return response.json()
 
+
 @app.route('/login-user', methods=['POST'])
 def login_user():
 
@@ -65,6 +66,13 @@ def login_user():
         }
     
     response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/login/user", data = user_data)
+    return response.json()
+
+
+@app.route('/<userId>/logout-user', methods=['PUT'])
+def logout_user(userId):
+
+    response = requests.put('http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/logout/user/'+ userId)
     return response.json()
 
 
@@ -162,9 +170,6 @@ def upload_player_document(userNonce, userId):
     return response.json()
 
 
-
-
-
 @app.route('/<userNonce>/<userId>/search-document', methods=['POST'])
 def search_document(userNonce, userId):
 
@@ -206,8 +211,4 @@ def search_document(userNonce, userId):
     response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/utils/download/A/"+userNonce+"/"+userId, json=search_params)
     
     return response.json()
-
-
-
-
 
