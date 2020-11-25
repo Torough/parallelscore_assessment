@@ -169,6 +169,56 @@ def upload_player_document(userNonce, userId):
     response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/utils/upload/A/"+userNonce+"/"+userId, data = player_data)
     return response.json()
 
+@app.route('/<userNonce>/<userId>/delete-document', methods=['POST'])
+def delete_document(userNonce, userId):
+    
+    
+    
+    """
+    Deletes documents for a certain user, documents to be deleted are specified in the API Client.
+    
+     Parameters
+    ----------
+    userNonce:str
+        security dynamic parameter, akin to OTP. Used in conjuction with userId to authenticate requests
+    userId
+        security dynamic parameter, akin to OTP. Used in conjuction with userNonce to authenticate requests
+
+    Returns
+    -------
+    str
+        Flask response
+
+
+    Sample Request : 
+    
+    { 
+	  "location" : "documents", "category" : "player_documents",
+	  "about" :"Spurs" 
+    }
+
+
+    """
+
+
+
+
+
+
+    request_data = request.get_json()
+    search_params = {
+        "search_params": {
+            "location": request_data["location"],
+            "category": request_data["category"],
+            "about": request_data["about"]
+        }
+    }
+    response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/utils/delete/A/"+userNonce+"/"+userId, json=search_params)
+    
+    return response.json()
+
+
+
 
 @app.route('/<userNonce>/<userId>/search-document', methods=['POST'])
 def search_document(userNonce, userId):
