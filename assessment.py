@@ -10,8 +10,13 @@ Official implementation for parallel score assessment given
 import json
 import requests 
 from flask import Flask, request, Response, jsonify
+#from retry import retry
+from tenacity import retry
 app = Flask(__name__)
 
+
+#@retry(ConnectionError, tries=3, delay=2) regular retry 
+@retry
 @app.route('/create-user', methods=['POST'])
 def create_user():
     """
@@ -42,6 +47,7 @@ def create_user():
     return response.json()
 
 
+@retry
 @app.route('/login-user', methods=['POST'])
 def login_user():
 
@@ -65,18 +71,21 @@ def login_user():
         "password": request_data["password"],
         }
     
+    
     response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/login/user", data = user_data)
     return response.json()
+    
 
 
+@retry
 @app.route('/<userId>/logout-user', methods=['PUT'])
 def logout_user(userId):
 
-    response = requests.put('http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/logout/user/'+ userId)
+    response = requests.put('http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/logout/user/' + userId )
     return response.json()
 
 
-
+@retry
 @app.route('/<userNonce>/<userId>/upload-team-document', methods=['POST'])
 def upload_team_document(userNonce, userId):
 
@@ -120,6 +129,7 @@ def upload_team_document(userNonce, userId):
     return resp.json()
 
 
+@retry
 @app.route('/<userNonce>/<userId>/upload-player-document', methods=['POST'])
 def upload_player_document(userNonce, userId):
 
@@ -169,6 +179,8 @@ def upload_player_document(userNonce, userId):
     response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/utils/upload/A/"+userNonce+"/"+userId, data = player_data)
     return response.json()
 
+
+@retry
 @app.route('/<userNonce>/<userId>/delete-document', methods=['POST'])
 def delete_document(userNonce, userId):
     
@@ -218,8 +230,7 @@ def delete_document(userNonce, userId):
     return response.json()
 
 
-
-
+@retry
 @app.route('/<userNonce>/<userId>/search-document', methods=['POST'])
 def search_document(userNonce, userId):
 
