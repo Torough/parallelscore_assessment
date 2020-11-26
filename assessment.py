@@ -10,13 +10,12 @@ Official implementation for parallel score assessment given
 import json
 import requests 
 from flask import Flask, request, Response, jsonify
-#from retry import retry
-from tenacity import retry
+from retry import retry
+#from tenacity import retry
 app = Flask(__name__)
 
 
-#@retry(ConnectionError, tries=3, delay=2) regular retry 
-@retry
+@retry( tries=2, delay=30) 
 @app.route('/create-user', methods=['POST'])
 def create_user():
     """
@@ -36,20 +35,42 @@ def create_user():
     request_data = request.get_json()
     user_data = {
         "username": request_data["username"],
-        "first_name": request_data["firstname"],
-        "last_name": request_data["lastname"],
+        "first_name": request_data["first_name"],
+        "last_name": request_data["last_name"],
         "password": request_data["password"],
-        "source": "email",
-        "role": "user"
+        "source": request_data["source"],
+        "role": request_data["role"]
         }
     
     response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/signup/form", data = user_data)
     return response.json()
 
 
-@retry
+
+@retry( tries=2, delay=30)
+@app.route('/<userNonce>/<userId>/update-account', methods=['POST'])
+def update_account(userNonce, userId):
+
+    request_data = request.get_json()
+    update= {
+        "update": {
+            "first_name": request_data["first_name"],
+            "last_name": request_data["last_name"],
+            
+        }
+    }
+    response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/profile/update/"+userNonce+"/"+userId, json=update)
+    return response.json()
+
+
+
+
+@retry(tries=2, delay=30)
 @app.route('/login-user', methods=['POST'])
 def login_user():
+
+    
+    
 
     """
    
@@ -65,6 +86,7 @@ def login_user():
         Flask response
 
     """
+
     request_data = request.get_json()
     user_data = {
         "username": request_data["username"],
@@ -72,12 +94,17 @@ def login_user():
         }
     
     
+    
     response = requests.post("http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/login/user", data = user_data)
+    
+    #print( response.json())
+
     return response.json()
+    #raise ConnectionError
     
 
 
-@retry
+@retry( tries=2, delay=30) 
 @app.route('/<userId>/logout-user', methods=['PUT'])
 def logout_user(userId):
 
@@ -85,7 +112,30 @@ def logout_user(userId):
     return response.json()
 
 
-@retry
+#@retry( tries=2, delay=3) 
+@app.route('/<userNonce>/<userId>/change-password', methods=['PUT'])
+def change_password(userNonce,userId):
+
+
+    request_data = request.get_json()
+    change_password = {
+
+        "password": request_data["password"],
+        "new_password": request_data["new_password"],
+        
+        }
+    response = requests.put('http://ec2-3-95-53-126.compute-1.amazonaws.com:3700/profile/changePassword/' +userNonce+" / "+userId, data = change_password )
+    return response.json()
+
+
+
+
+
+
+
+
+@retry()
+@retry( tries=2, delay=30)
 @app.route('/<userNonce>/<userId>/upload-team-document', methods=['POST'])
 def upload_team_document(userNonce, userId):
 
@@ -129,7 +179,7 @@ def upload_team_document(userNonce, userId):
     return resp.json()
 
 
-@retry
+@retry((ConnectionError), tries=2, delay=30)
 @app.route('/<userNonce>/<userId>/upload-player-document', methods=['POST'])
 def upload_player_document(userNonce, userId):
 
@@ -180,7 +230,7 @@ def upload_player_document(userNonce, userId):
     return response.json()
 
 
-@retry
+@retry((ConnectionError), tries=2, delay=30)
 @app.route('/<userNonce>/<userId>/delete-document', methods=['POST'])
 def delete_document(userNonce, userId):
     
@@ -230,7 +280,7 @@ def delete_document(userNonce, userId):
     return response.json()
 
 
-@retry
+@retry((ConnectionError), tries=2, delay=30)
 @app.route('/<userNonce>/<userId>/search-document', methods=['POST'])
 def search_document(userNonce, userId):
 
